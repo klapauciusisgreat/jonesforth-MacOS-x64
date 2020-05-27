@@ -6,7 +6,7 @@
 	based on linux x86A-64 port by John Leuner <jewel@subvert-the-dominant-paradigm.net> and
 	updated from version 45 to 47
 
-	gcc -nostdlib -static -o jonesforth64 jonesforth64.S
+	gcc -nostdlib -segprot __DATA rwx rwx -static -o jonesforth64 jonesforth64.S
 
 
 	I left comemnts (mostly) intact, so they still refer to the i386 architecture.
@@ -145,6 +145,11 @@
 	assemble and run the code (save this file as 'jonesforth.S') are:
 
 	gcc -m32 -nostdlib -static -Wl,-Ttext,0 -Wl,--build-id=none -o jonesforth jonesforth.S
+
+
+        on MacOS Catalina:
+        gcc -nostdlib -segprot __DATA rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
+
 	cat jonesforth.f - | ./jonesforth
 
 	If you want to run your own FORTH programs you can do:
@@ -583,10 +588,91 @@ stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
 	to "quit" your program and go back to interpreting).
 */
 
+//TODO(Klapaucius): I defined syscall constants below explicitly since I don't know where to properly inlude them from
+// https://opensource.apple.com/source/xnu/xnu-1504.3.12/bsd/kern/syscalls.master
+// https://filippo.io/making-system-calls-from-assembly-in-mac-os-x/
+// https://stackoverflow.com/questions/36706962/storing-keyboard-input-in-x64-assembly-mac-os-x
+#define __NR_exit 0x2000001
+#define __NR_open 0x2000005
+#define __NR_close 0x2000006
+#define __NR_read 0x2000003
+#define __NR_write 0x2000004
+#define __NR_mprotect 0x2000074
+
+//#include <asm-i386/unistd.h>	// you might need this instead
+//#include <asm/unistd.h>
+
+#define PROT_READ 0x01
+#define PROT_WRITE 0x02
+#define PROT_EXEC 0x04
+#define PROT_ALL (PROT_READ | PROT_WRITE | PROT_EXEC)
+#define PAGE_SIZE 4096
+
+
+// https://opensource.apple.com/source/xnu/xnu-201/bsd/sys/errno.h
+#define	EACCES		13		/* Permission denied */
+#define	EINVAL		22		/* Invalid argument */
+#define ENOTSUP	45		/* Operation not supported */
+
+
 /* Assembler entry point. */
 	.text
 	.globl start
 start:
+
+/* In theory, the following should make the area where user defined forth words are stored
+   read/write/executable. This is important for inlined assembly which is basically self-modfying code.
+
+   However, MacOS Catalina returns ENOTSUP, which I believe is intentional since it presents
+   security problems. I leave this code commented until a solution is found.
+
+   In the meantime, the makefile uses a gcc option that makes the entire data segment executable.
+
+        // use mprotect to allow read/write/execute of the .bss section
+        mov $__NR_mprotect, %rax		//mprotect
+	lea user_defs_start(%rip), %rdi		// start address
+	and $~PAGE_SIZE,%rdi 			// align at page boundary
+        mov $USER_DEFS_SIZE, %rsi		// length
+        mov $PROT_ALL,%rdx
+	syscall
+	cmp $EINVAL, %rax
+        je 1f
+        cmp $EACCES,%rax
+        je 2f
+        test %rax,%rax
+	je 4f					// all good, proceed:
+
+        // must be ENOTSUP
+	mov $2,%rdi			// 1st param: stderr
+	lea errENOTSUP(%rip),%rsi		// 2nd param: error message
+	mov $8,%rdx 	// 3rd param: length of string
+	mov $__NR_write,%rax		// write syscall
+	syscall
+	jmp 3f
+
+1:
+	mov $2,%rdi			// 1st param: stderr
+	lea errEINVAL(%rip),%rsi		// 2nd param: error message
+	mov $7,%rdx 	// 3rd param: length of string
+	mov $__NR_write,%rax		// write syscall
+	syscall
+	jmp 3f
+
+2:
+	mov $2,%rdi			// 1st param: stderr
+	lea errEACCES(%rip),%rsi		// 2nd param: error message
+	mov $7,%rdx 	// 3rd param: length of string
+	mov $__NR_write,%rax		// write syscall
+	syscall
+
+3:
+	// did't work -- then exit
+	xor %rdi,%rdi
+        mov $__NR_exit,%rax     // syscall: exit
+        syscall
+ 
+4:
+*/
 	cld
 	mov %rsp,var_SZ(%rip)		// Save the initial data stack pointer in FORTH variable S0.
 	lea return_stack_top(%rip),%rbp // Initialise the return stack.
@@ -1192,18 +1278,6 @@ var_$3 :
 	SYS_*		and the numeric codes of various Linux syscalls (from <asm/unistd.h>)
 */
 
-//TODO(Klapaucius): I defined syscall constants below explicitly since I don't know where to properly inlude them from
-// https://opensource.apple.com/source/xnu/xnu-1504.3.12/bsd/kern/syscalls.master
-// https://filippo.io/making-system-calls-from-assembly-in-mac-os-x/
-// https://stackoverflow.com/questions/36706962/storing-keyboard-input-in-x64-assembly-mac-os-x
-#define __NR_exit 0x2000001
-#define __NR_open 0x2000005
-#define __NR_close 0x2000006
-#define __NR_read 0x2000003
-#define __NR_write 0x2000004
-
-//#include <asm-i386/unistd.h>	// you might need this instead
-//#include <asm/unistd.h>
 	
         .macro defconst
         defcode $0,$1,$2,$3,$4
@@ -2253,6 +2327,9 @@ _COMMA:
 	.const
 errmsg: .ascii "PARSE ERROR: "
 errmsgend:
+errENOTSUP: .ascii "ENOTSUP\n"
+errEACCES: .ascii "EACCES\n"
+errEINVAL: .ascii "EINVAL\n"
 errmsgnl: .ascii "\n"
 
 	.data			// NB: easier to fit in the .data section
@@ -2388,18 +2465,16 @@ set_up_data_segment:
 	.set BUFFER_SIZE,4096
         .set USER_DEFS_SIZE,65536*2 //128kiB ought to be enough for everybody
 
-	// This used to be a bss segment.
-	//.bss
+	.bss
 	// One of the things FORTH can do is to write inline assembler. Check the code in
 	// jonesforth.f (toward the end), it's amazing!
 	// This means self-modifying code, and modern security practices get in the way.
-	// The only way I made this work on OSX 10.15+ for now is to move all data in
-	// the text segment and mark that as executable in the commandline:
-	// 	gcc -nostdlib -segprot __TEXT rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
+	// The only way I made this work on OSX 10.15+ for now is to invoke a gcc option
+        // that is not blocked by Apple (yet!): 
+	// 	gcc -nostdlib -segprot __DATA rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
 	// It's worth looking for a better solution, but for now, it makes test_assembler.f
 	// pass. Yay!
-	// Downside: this blows up the executable size :(
-	.text
+
 /* FORTH return stack. */
 	.balign 8 		// was .aligned to 4096, but unclear why
 return_stack:

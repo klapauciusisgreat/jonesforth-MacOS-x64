@@ -8,7 +8,7 @@ SHELL	:= /bin/bash
 all:	jonesforth
 
 jonesforth: jonesforth.S
-	gcc -nostdlib -segprot __TEXT rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
+	gcc -nostdlib -segprot __DATA rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
 
 run:
 	cat jonesforth.f $(PROG) - | ./jonesforth
