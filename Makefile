@@ -1,14 +1,9 @@
-# $Id: Makefile,v 1.9 2007-10-22 18:53:12 rich Exp $
-
-#BUILD_ID_NONE := -Wl,--build-id=none 
-BUILD_ID_NONE := 
-
 SHELL	:= /bin/bash
 
 all:	jonesforth
 
 jonesforth: jonesforth.S
-	gcc -nostdlib -segprot __DATA rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
+	gcc -nostdlib -static -o $@ $<
 
 run:
 	cat jonesforth.f $(PROG) - | ./jonesforth

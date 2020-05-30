@@ -1,12 +1,12 @@
-/*      A sometimes minimal FORTH compiler and tutorial for Linux / i386 systems. -*- asm -*-                                                                                                                                                 
-        By Richard W.M. Jones <rich@annexia.org> http://annexia.org/forth                                                                                                                                                                     
+/*      A sometimes minimal FORTH compiler and tutorial for Linux / i386 systems. -*- asm -*-
+        By Richard W.M. Jones <rich@annexia.org> http://annexia.org/forth
         This is PUBLIC DOMAIN (see public domain release statement below).
 
 	Port of jonesforth to MacOs/x64 by <klapaucius@gmail.com>
 	based on linux x86A-64 port by John Leuner <jewel@subvert-the-dominant-paradigm.net> and
 	updated from version 45 to 47
 
-	gcc -nostdlib -segprot __DATA rwx rwx -static -o jonesforth64 jonesforth64.S
+	gcc -nostdlib -static -o jonesforth jonesforth.S
 
 
 	I left comemnts (mostly) intact, so they still refer to the i386 architecture.
@@ -147,8 +147,8 @@
 	gcc -m32 -nostdlib -static -Wl,-Ttext,0 -Wl,--build-id=none -o jonesforth jonesforth.S
 
 
-        on MacOS Catalina:
-        gcc -nostdlib -segprot __DATA rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
+	on MacOS Catalina:
+	gcc -nostdlib -static -o $@ $<
 
 	cat jonesforth.f - | ./jonesforth
 
@@ -171,9 +171,9 @@
 	    available on i386 are: %eax, %ebx, %ecx, %edx, %esi, %edi, %ebp and %esp, and most of them
 	    have special purposes.
 
-	(2) Add, mov, etc. take arguments in the form SRC,DEST.  So mov %eax,%ecx moves %eax -> %ecx
+	(2) Add, mov, etc. take arguments in the form SRC,DEST.	 So mov %eax,%ecx moves %eax -> %ecx
 
-	(3) Constants are prefixed with '$', and you mustn't forget it!  If you forget it then it
+	(3) Constants are prefixed with '$', and you mustn't forget it!	 If you forget it then it
 	    causes a read from memory instead, so:
 	    mov $2,%eax		moves number 2 into %eax
 	    mov 2,%eax		reads the 32 bit word from address 2 into %eax (ie. most likely a mistake)
@@ -204,11 +204,11 @@
 
 	<--- DICTIONARY ENTRY (HEADER) ----------------------->
 	+------------------------+--------+---------- - - - - +----------- - - - -
-	| LINK POINTER           | LENGTH/| NAME	      | DEFINITION
-	|			 | FLAGS  |     	      |
+	| LINK POINTER		 | LENGTH/| NAME	      | DEFINITION
+	|			 | FLAGS  |		      |
 	+--- (4 bytes) ----------+- byte -+- n bytes  - - - - +----------- - - - -
 
-	I'll come to the definition of the word later.  For now just look at the header.  The first
+	I'll come to the definition of the word later.	For now just look at the header.  The first
 	4 bytes are the link pointer.  This points back to the previous word in the dictionary, or, for
 	the first word in the dictionary it is just a NULL pointer.  Then comes a length/flags byte.
 	The length of the word can be up to 31 characters (5 bits used) and the top three bits are used
@@ -225,16 +225,16 @@
 	   ^
 	   |
 	+--|------+---+---+---+---+---+---+---+---+------------- - - - -
-	| LINK    | 6 | D | O | U | B | L | E | 0 | (definition ...)
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | (definition ...)
 	+---------+---+---+---+---+---+---+---+---+------------- - - - -
-           ^       len                         padding
+	   ^	   len			       padding
 	   |
 	+--|------+---+---+---+---+---+---+---+---+---+---+---+---+------------- - - - -
-	| LINK    | 9 | Q | U | A | D | R | U | P | L | E | 0 | 0 | (definition ...)
+	| LINK	  | 9 | Q | U | A | D | R | U | P | L | E | 0 | 0 | (definition ...)
 	+---------+---+---+---+---+---+---+---+---+---+---+---+---+------------- - - - -
-           ^       len                                     padding
-           |
-           |
+	   ^	   len					   padding
+	   |
+	   |
 	  LATEST
 
 	You should be able to see from this how you might implement functions to find a word in
@@ -262,7 +262,7 @@
 
 	Let's talk first about what "threaded code" means.  Imagine a peculiar version of C where
 	you are only allowed to call functions without arguments.  (Don't worry for now that such a
-	language would be completely useless!)  So in our peculiar C, code would look like this:
+	language would be completely useless!)	So in our peculiar C, code would look like this:
 
 	f ()
 	{
@@ -272,7 +272,7 @@
 	}
 
 	and so on.  How would a function, say 'f' above, be compiled by a standard C compiler?
-	Probably into assembly code like this.  On the right hand side I've written the actual
+	Probably into assembly code like this.	On the right hand side I've written the actual
 	i386 machine code.
 
 	f:
@@ -302,7 +302,7 @@
 	interpreter which takes each set of bytes and calls it.
 
 	On an i386 machine it turns out that we can write this interpreter rather easily, in just
-	two assembly instructions which turn into just 3 bytes of machine code.  Let's store the
+	two assembly instructions which turn into just 3 bytes of machine code.	 Let's store the
 	pointer to the next word to execute in the %esi register:
 
 		08 00 00 00	<- We're executing this one now.  %esi is the _next_ one to execute.
@@ -336,7 +336,7 @@
 	jmpq *(%rax)
 	.endm
 
-/*	The macro is called NEXT.  That's a FORTH-ism.  It expands to those two instructions.
+/*	The macro is called NEXT.  That's a FORTH-ism.	It expands to those two instructions.
 
 	Every FORTH primitive that we write has to be ended by NEXT.  Think of it kind of like
 	a return.
@@ -344,7 +344,7 @@
 	The above describes what is known as direct threaded code.
 
 	To sum up: We compress our function calls down to a list of addresses and use a somewhat
-	magical macro to act as a "jump to next function in the list".  We also use one register (%esi)
+	magical macro to act as a "jump to next function in the list".	We also use one register (%esi)
 	to act as a kind of instruction pointer, pointing to the next function in the list.
 
 	I'll just give you a hint of what is to come by saying that a FORTH definition such as:
@@ -366,8 +366,8 @@
 
 		+------------------+
 		| addr of DOUBLE  --------------------> (assembly code to do the double)
-		+------------------+                    NEXT
-	%esi ->	| addr of DOUBLE   |
+		+------------------+			NEXT
+	%esi -> | addr of DOUBLE   |
 		+------------------+
 
 	We can add an extra indirection to allow us to run both words written in assembly language
@@ -377,32 +377,32 @@
 
 	Let's have a look at how QUADRUPLE and DOUBLE really look in FORTH:
 
-	        : QUADRUPLE DOUBLE DOUBLE ;
+		: QUADRUPLE DOUBLE DOUBLE ;
 
 		+------------------+
-		| codeword         |		   : DOUBLE DUP + ;
+		| codeword	   |		   : DOUBLE DUP + ;
 		+------------------+
 		| addr of DOUBLE  ---------------> +------------------+
-		+------------------+               | codeword         |
+		+------------------+		   | codeword	      |
 		| addr of DOUBLE   |		   +------------------+
-		+------------------+	   	   | addr of DUP   --------------> +------------------+
-		| addr of EXIT	   |		   +------------------+            | codeword      -------+
-		+------------------+	   %esi -> | addr of +     --------+	   +------------------+   |
+		+------------------+		   | addr of DUP   --------------> +------------------+
+		| addr of EXIT	   |		   +------------------+		   | codeword	   -------+
+		+------------------+	   %esi -> | addr of +	   --------+	   +------------------+	  |
 						   +------------------+	   |	   | assembly to    <-----+
-						   | addr of EXIT     |    |       | implement DUP    |
+						   | addr of EXIT     |	   |	   | implement DUP    |
 						   +------------------+	   |	   |	..	      |
-									   |	   |    ..            |
-									   |	   | NEXT             |
+									   |	   |	..	      |
+									   |	   | NEXT	      |
 									   |	   +------------------+
 									   |
 									   +-----> +------------------+
-										   | codeword      -------+
-										   +------------------+   |
+										   | codeword	   -------+
+										   +------------------+	  |
 										   | assembly to   <------+
 										   | implement +      |
-										   | 	..            |
-										   | 	..            |
-										   | NEXT      	      |
+										   |	..	      |
+										   |	..	      |
+										   | NEXT	      |
 										   +------------------+
 
 	This is the part where you may need an extra cup of tea/coffee/favourite caffeinated
@@ -416,7 +416,7 @@
 	function.
 
 	I'll show you the interpreter function shortly, but let's recall our indirect
-	JMP *(%eax) with the "extra" brackets.  Take the case where we're executing DOUBLE
+	JMP *(%eax) with the "extra" brackets.	Take the case where we're executing DOUBLE
 	as shown, and DUP has been called.  Note that %esi is pointing to the address of +
 
 	The assembly code for DUP eventually does a NEXT.  That:
@@ -427,35 +427,35 @@
 							ie. the assembly code to implement +
 
 		+------------------+
-		| codeword         |
+		| codeword	   |
 		+------------------+
 		| addr of DOUBLE  ---------------> +------------------+
-		+------------------+               | codeword         |
+		+------------------+		   | codeword	      |
 		| addr of DOUBLE   |		   +------------------+
-		+------------------+	   	   | addr of DUP   --------------> +------------------+
-		| addr of EXIT	   |		   +------------------+            | codeword      -------+
-		+------------------+	   	   | addr of +     --------+	   +------------------+   |
+		+------------------+		   | addr of DUP   --------------> +------------------+
+		| addr of EXIT	   |		   +------------------+		   | codeword	   -------+
+		+------------------+		   | addr of +	   --------+	   +------------------+	  |
 						   +------------------+	   |	   | assembly to    <-----+
-					   %esi -> | addr of EXIT     |    |       | implement DUP    |
+					   %esi -> | addr of EXIT     |	   |	   | implement DUP    |
 						   +------------------+	   |	   |	..	      |
-									   |	   |    ..            |
-									   |	   | NEXT             |
+									   |	   |	..	      |
+									   |	   | NEXT	      |
 									   |	   +------------------+
 									   |
 									   +-----> +------------------+
-										   | codeword      -------+
-										   +------------------+   |
+										   | codeword	   -------+
+										   +------------------+	  |
 									now we're  | assembly to    <-----+
 									executing  | implement +      |
-									this	   | 	..            |
-									function   | 	..            |
-										   | NEXT      	      |
+									this	   |	..	      |
+									function   |	..	      |
+										   | NEXT	      |
 										   +------------------+
 
 	So I hope that I've convinced you that NEXT does roughly what you'd expect.  This is
 	indirect threaded code.
 
-	I've glossed over four things.  I wonder if you can guess without reading on what they are?
+	I've glossed over four things.	I wonder if you can guess without reading on what they are?
 
 	.
 	.
@@ -516,7 +516,7 @@
 	all FORTH definitions start with a colon, as in : DOUBLE DUP + ;
 
 	The "interpreter" (it's not really "interpreting") just needs to push the old %esi on the
-	stack and set %esi to the first word in the definition.  Remember that we jumped to the
+	stack and set %esi to the first word in the definition.	 Remember that we jumped to the
 	function using JMP *(%eax)?  Well a consequence of that is that conveniently %eax contains
 	the address of this codeword, so just by adding 4 to it we get the address of the first
 	data word.  Finally after setting up %esi, it just does NEXT which causes that first word
@@ -538,29 +538,29 @@ DOCOL:
 
 		QUADRUPLE:
 		+------------------+
-		| codeword         |
+		| codeword	   |
 		+------------------+		   DOUBLE:
 		| addr of DOUBLE  ---------------> +------------------+
-		+------------------+       %eax -> | addr of DOCOL    |
-	%esi ->	| addr of DOUBLE   |		   +------------------+
-		+------------------+	   	   | addr of DUP      |
+		+------------------+	   %eax -> | addr of DOCOL    |
+	%esi -> | addr of DOUBLE   |		   +------------------+
+		+------------------+		   | addr of DUP      |
 		| addr of EXIT	   |		   +------------------+
-		+------------------+               | etc.             |
+		+------------------+		   | etc.	      |
 
-	First, the call to DOUBLE calls DOCOL (the codeword of DOUBLE).  DOCOL does this:  It
+	First, the call to DOUBLE calls DOCOL (the codeword of DOUBLE).	 DOCOL does this:  It
 	pushes the old %esi on the return stack.  %eax points to the codeword of DOUBLE, so we
 	just add 4 on to it to get our new %esi:
 
 		QUADRUPLE:
 		+------------------+
-		| codeword         |
+		| codeword	   |
 		+------------------+		   DOUBLE:
 		| addr of DOUBLE  ---------------> +------------------+
-top of return	+------------------+       %eax -> | addr of DOCOL    |
-stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
+top of return	+------------------+	   %eax -> | addr of DOCOL    |
+stack points -> | addr of DOUBLE   |	   + 4 =   +------------------+
 		+------------------+	   %esi -> | addr of DUP      |
 		| addr of EXIT	   |		   +------------------+
-		+------------------+               | etc.             |
+		+------------------+		   | etc.	      |
 
 	Then we do NEXT, and because of the magic of threaded code that increments %esi again
 	and calls DUP.
@@ -582,7 +582,7 @@ stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
 
 	This is what the set up code does.  Does a tiny bit of house-keeping, sets up the
 	separate return stack (NB: Linux gives us the ordinary parameter stack already), then
-	immediately jumps to a FORTH word called QUIT.  Despite its name, QUIT doesn't quit
+	immediately jumps to a FORTH word called QUIT.	Despite its name, QUIT doesn't quit
 	anything.  It resets some internal state and starts reading and interpreting commands.
 	(The reason it is called QUIT is because you can call QUIT from your own FORTH code
 	to "quit" your program and go back to interpreting).
@@ -597,7 +597,8 @@ stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
 #define __NR_close 0x2000006
 #define __NR_read 0x2000003
 #define __NR_write 0x2000004
-#define __NR_mprotect 0x2000074
+#define __NR_mmap 0x20000c5
+
 
 //#include <asm-i386/unistd.h>	// you might need this instead
 //#include <asm/unistd.h>
@@ -607,12 +608,16 @@ stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
 #define PROT_EXEC 0x04
 #define PROT_ALL (PROT_READ | PROT_WRITE | PROT_EXEC)
 #define PAGE_SIZE 4096
+#define MAP_ANON 0x1000
+#define MAP_SHARED	0x0001
+#define MAP_PRIVATE	0x0002
 
 
 // https://opensource.apple.com/source/xnu/xnu-201/bsd/sys/errno.h
-#define	EACCES		13		/* Permission denied */
-#define	EINVAL		22		/* Invalid argument */
-#define ENOTSUP	45		/* Operation not supported */
+#define EACCES		13		/* Permission denied */
+#define EFAULT		14
+#define EINVAL		22		/* Invalid argument */
+#define ENOTSUP 45		/* Operation not supported */
 
 
 /* Assembler entry point. */
@@ -620,66 +625,71 @@ stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
 	.globl start
 start:
 
-/* In theory, the following should make the area where user defined forth words are stored
-   read/write/executable. This is important for inlined assembly which is basically self-modfying code.
+/* In the original JonesForth, the user defined Forth words are in the
+	bss segment. MacOS Catalina makes it hard to give bss segment
+	rwx permissions, required for alowing the forth assembler to
+	generate code online.
 
-   However, MacOS Catalina returns ENOTSUP, which I believe is intentional since it presents
-   security problems. I leave this code commented until a solution is found.
+	To make this explicit, and to allow more sophisticated memory
+	management down the road, We are instead grabbing memory with
+	the right permissions via the mmap interface.
 
-   In the meantime, the makefile uses a gcc option that makes the entire data segment executable.
+	Note that Apple does explicitly dissuade developers from
+	calling syscalls directly (by designating the syscall API only
+	stable within a major release), and recommends calling the
+	library wrapper layer.
 
-        // use mprotect to allow read/write/execute of the .bss section
-        mov $__NR_mprotect, %rax		//mprotect
-	lea user_defs_start(%rip), %rdi		// start address
-	and $~PAGE_SIZE,%rdi 			// align at page boundary
-        mov $USER_DEFS_SIZE, %rsi		// length
-        mov $PROT_ALL,%rdx
+	Since jonesforth is more like a home-made go-cart or after
+	market drag race car, and less like a leased armoured Daimler
+	limosine, I still call the syscall directly. If the syscall
+	ABI changes, so will jonesforth. This allows jonesforth (the
+	binary) to still fit into about 17 kilobyte.
+
+
+	So for now, we have only a staticlly sized arena allocated via
+	mmap. Extending this is a useful but OS specific
+	exercise. This should probably be done in jonesforth.f
+
+	*/
+
+
+	/*
+	The syscall convention is to pass parameters in these six registers:
+	RDI, RSI, RDX, r10, r8, r9
+	https://filippo.io/making-system-calls-from-assembly-in-mac-os-x/
+
+	The return value is passed in %rax. An error is signaled in
+	the carry register, and if there is an error, %rax contains
+	errno
+	*/
+
+
+	xor %rdi,%rdi			// start address
+	mov $USER_DEFS_SIZE,%rsi	// length
+	mov $PROT_ALL, %rdx		// rwx
+	mov $(MAP_ANON|MAP_SHARED),%r10 // flags
+	xor %r8,%r8			// file descriptor
+	xor %r9,%r9			// offset
+	mov $__NR_mmap, %rax		// mmap
 	syscall
-	cmp $EINVAL, %rax
-        je 1f
-        cmp $EACCES,%rax
-        je 2f
-        test %rax,%rax
-	je 4f					// all good, proceed:
+	jnc 1f				// mmap worked!
 
-        // must be ENOTSUP
 	mov $2,%rdi			// 1st param: stderr
-	lea errENOTSUP(%rip),%rsi		// 2nd param: error message
-	mov $8,%rdx 	// 3rd param: length of string
+	lea errMMAPFAILED(%rip),%rsi	// 2nd param: error message
+					// 3rd param: length of string
+	mov $(errMMAPFAILEDEND-errMMAPFAILED),%rdx
 	mov $__NR_write,%rax		// write syscall
 	syscall
-	jmp 3f
+
+	mov $1,%rdi
+	mov $__NR_exit,%rax		// syscall: exit
+	syscall
 
 1:
-	mov $2,%rdi			// 1st param: stderr
-	lea errEINVAL(%rip),%rsi		// 2nd param: error message
-	mov $7,%rdx 	// 3rd param: length of string
-	mov $__NR_write,%rax		// write syscall
-	syscall
-	jmp 3f
-
-2:
-	mov $2,%rdi			// 1st param: stderr
-	lea errEACCES(%rip),%rsi		// 2nd param: error message
-	mov $7,%rdx 	// 3rd param: length of string
-	mov $__NR_write,%rax		// write syscall
-	syscall
-
-3:
-	// did't work -- then exit
-	xor %rdi,%rdi
-        mov $__NR_exit,%rax     // syscall: exit
-        syscall
- 
-4:
-*/
+	mov %rax,var_HERE(%rip)
 	cld
 	mov %rsp,var_SZ(%rip)		// Save the initial data stack pointer in FORTH variable S0.
 	lea return_stack_top(%rip),%rbp // Initialise the return stack.
-        // commented out data segment handling - for now we will only have a staticlly sized bss
-	// extending segments is different on MacOS:
-	//
-	//call set_up_data_segment
 
 	lea cold_start(%rip),%rsi	// Initialise interpreter.
 	NEXT				// Run interpreter!
@@ -698,9 +708,9 @@ cold_start:				// High-level code without a codeword.
 	   ^
 	   |
 	+--|------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        | +          | EXIT       |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    | +		 | EXIT	      |
 	+---------+---+---+---+---+---+---+---+---+------------+--|---------+------------+------------+
-           ^       len                         pad  codeword      |
+	   ^	   len			       pad  codeword	  |
 	   |							  V
 	  LINK in next word				points to codeword of DUP
 
@@ -738,23 +748,23 @@ DOUBLE: .int DOCOL		// codeword
 	.set F_LENMASK,0x1f	// length mask
 
 	// Store the chain of links.
-	// .set link,0  // apple assembler does not allow re-assigning things, so need to maintain linkage
-	//              // explicitely
+	// .set link,0	// apple assembler does not allow re-assigning things, so need to maintain linkage
+	//		// explicitely
 
-        .macro defword
-        .const_data
-        .balign 8
-        .globl name_$3
+	.macro defword
+	.const_data
+	.balign 8
+	.globl name_$3
 name_$3 :
-        .quad $4                // link
-        .byte $2+$1             // flags + length byte
-        .ascii $0               // the name
-        .balign 8                // padding to next 4 byte boundary
-        .globl $3
+	.quad $4		// link
+	.byte $2+$1		// flags + length byte
+	.ascii $0		// the name
+	.balign 8		 // padding to next 4 byte boundary
+	.globl $3
 $3 :
-        .quad DOCOL             // codeword - the interpreter
-        // list of word pointers follow
-        .endm
+	.quad DOCOL		// codeword - the interpreter
+	// list of word pointers follow
+	.endm
 
 
 
@@ -770,9 +780,9 @@ $3 :
 	   ^
 	   |
 	+--|------+---+---+---+---+------------+
-	| LINK    | 3 | D | U | P | code_DUP ---------------------> points to the assembly
+	| LINK	  | 3 | D | U | P | code_DUP ---------------------> points to the assembly
 	+---------+---+---+---+---+------------+		    code used to write DUP,
-           ^       len              codeword			    which ends with NEXT.
+	   ^	   len		    codeword			    which ends with NEXT.
 	   |
 	  LINK in next word
 
@@ -780,28 +790,28 @@ $3 :
 	As with defword above, don't worry about the complicated details of the macro.
 */
 
-        .macro defcode
-        .const_data
-        .balign 8
-        .globl name_$3
+	.macro defcode
+	.const_data
+	.balign 8
+	.globl name_$3
 name_$3 :
-        .quad $4                // link
-        .byte $2+$1             // flags + length byte
-        .ascii $0               // the name
-        .balign 8               // padding to next 4 byte boundary
-        .globl $3
+	.quad $4		// link
+	.byte $2+$1		// flags + length byte
+	.ascii $0		// the name
+	.balign 8		// padding to next 4 byte boundary
+	.globl $3
 $3 :
-        .quad code_$3   	// codeword
-        .text
-        .balign 8
-        .globl code_$3
-code_$3 :                       // assembler code follows
-        .endm
+	.quad code_$3		// codeword
+	.text
+	.balign 8
+	.globl code_$3
+code_$3 :			// assembler code follows
+	.endm
 
 
 /*
-	Now some easy FORTH primitives.  These are written in assembly for speed.  If you understand
-	i386 assembly language then it is worth reading these.  However if you don't understand assembly
+	Now some easy FORTH primitives.	 These are written in assembly for speed.  If you understand
+	i386 assembly language then it is worth reading these.	However if you don't understand assembly
 	you can skip the details.
 */
 
@@ -900,12 +910,12 @@ code_$3 :                       // assembler code follows
 
 	defcode "+",1,,ADD,name_DECR8
 	pop %rax		// get top of stack
-	add %rax,(%rsp)	// and add it to next word on stack
+	add %rax,(%rsp) // and add it to next word on stack
 	NEXT
 
 	defcode "-",1,,SUB,name_ADD
 	pop %rax		// get top of stack
-	sub %rax,(%rsp)	// and subtract it from next word on stack
+	sub %rax,(%rsp) // and subtract it from next word on stack
 	NEXT
 
 	defcode "*",1,,MUL,name_SUB
@@ -916,7 +926,7 @@ code_$3 :                       // assembler code follows
 	NEXT
 
 /*
-	In this FORTH, only /MOD is primitive.  Later we will define the / and MOD words in
+	In this FORTH, only /MOD is primitive.	Later we will define the / and MOD words in
 	terms of the primitive /MOD.  The design of the i386 assembly instruction idiv which
 	leaves both quotient and remainder makes this the obvious choice.
 */
@@ -1068,14 +1078,14 @@ code_$3 :                       // assembler code follows
 
 		QUADRUPLE
 		+------------------+
-		| codeword         |
+		| codeword	   |
 		+------------------+		   DOUBLE
 		| addr of DOUBLE  ---------------> +------------------+
-		+------------------+               | codeword         |
+		+------------------+		   | codeword	      |
 		| addr of DOUBLE   |		   +------------------+
-		+------------------+	   	   | addr of DUP      |
+		+------------------+		   | addr of DUP      |
 		| addr of EXIT	   |		   +------------------+
-		+------------------+	   	   | addr of +        |
+		+------------------+		   | addr of +	      |
 						   +------------------+
 					   %esi -> | addr of EXIT     |
 						   +------------------+
@@ -1093,14 +1103,14 @@ code_$3 :                       // assembler code follows
 
 		QUADRUPLE
 		+------------------+
-		| codeword         |
+		| codeword	   |
 		+------------------+		   DOUBLE
 		| addr of DOUBLE  ---------------> +------------------+
-		+------------------+               | codeword         |
-	%esi ->	| addr of DOUBLE   |		   +------------------+
-		+------------------+	   	   | addr of DUP      |
+		+------------------+		   | codeword	      |
+	%esi -> | addr of DOUBLE   |		   +------------------+
+		+------------------+		   | addr of DUP      |
 		| addr of EXIT	   |		   +------------------+
-		+------------------+	   	   | addr of +        |
+		+------------------+		   | addr of +	      |
 						   +------------------+
 						   | addr of EXIT     |
 						   +------------------+
@@ -1121,7 +1131,7 @@ code_$3 :                       // assembler code follows
 	FORTH solves this by compiling the function using a special word called LIT:
 
 	+---------------------------+-------+-------+-------+-------+-------+
-	| (usual header of DOUBLE)  | DOCOL | LIT   | 2     | *     | EXIT  |
+	| (usual header of DOUBLE)  | DOCOL | LIT   | 2	    | *	    | EXIT  |
 	+---------------------------+-------+-------+-------+-------+-------+
 
 	LIT is executed in the normal way, but what it does next is definitely not normal.  It
@@ -1129,7 +1139,7 @@ code_$3 :                       // assembler code follows
 	manipulates %esi in order to skip the number as if it had never been there.
 
 	What's neat is that the whole grab/manipulate can be done using a single byte single
-	i386 instruction, our old friend LODSL.  Rather than me drawing more ASCII-art diagrams,
+	i386 instruction, our old friend LODSL.	 Rather than me drawing more ASCII-art diagrams,
 	see if you can find out how LIT works:
 */
 
@@ -1145,7 +1155,7 @@ code_$3 :                       // assembler code follows
 	MEMORY ----------------------------------------------------------------------
 
 	As important point about FORTH is that it gives you direct access to the lowest levels
-	of the machine.  Manipulating memory directly is done frequently in FORTH, and these are
+	of the machine.	 Manipulating memory directly is done frequently in FORTH, and these are
 	the primitive words for doing it.
 */
 
@@ -1164,13 +1174,13 @@ code_$3 :                       // assembler code follows
 	defcode "+!",2,,ADDSTORE,name_FETCH
 	pop %rbx		// address
 	pop %rax		// the amount to add
-	add %rax,(%rbx)	// add it
+	add %rax,(%rbx) // add it
 	NEXT
 
 	defcode "-!",2,,SUBSTORE,name_ADDSTORE
 	pop %rbx		// address
 	pop %rax		// the amount to subtract
-	sub %rax,(%rbx)	// add it
+	sub %rax,(%rbx) // add it
 	NEXT
 
 /*
@@ -1228,34 +1238,34 @@ code_$3 :                       // assembler code follows
 	LATEST @ . CR
 
 	To make defining variables shorter, I'm using a macro called defvar, similar to defword and
-	defcode above.  (In fact the defvar macro uses defcode to do the dictionary header).
+	defcode above.	(In fact the defvar macro uses defcode to do the dictionary header).
 */
 
 	.macro defvar
-        defcode $0,$1,$2,$3,$4
-        // I'd like to: push $var_$3
+	defcode $0,$1,$2,$3,$4
+	// I'd like to: push $var_$3
 	// but on x64 I have to:
 	lea var_$3(%rip),%rax
 	push %rax
-        NEXT
-        .data
-        .balign 8
+	NEXT
+	.data
+	.balign 8
 var_$3 :
-        .quad $5
-        .endm
+	.quad $5
+	.endm
 
 /*
 	The built-in variables are:
 
 	STATE		Is the interpreter executing code (0) or compiling a word (non-zero)?
 	LATEST		Points to the latest (most recently defined) word in the dictionary.
-	HERE		Points to the next free byte of memory.  When compiling, compiled words go here.
+	HERE		Points to the next free byte of memory.	 When compiling, compiled words go here.
 	S0		Stores the address of the top of the parameter stack.
 	BASE		The current base for printing and reading numbers.
 
 */
 	defvar "STATE",5,,STATE,name_CMOVE,0
-	defvar "HERE",4,,HERE,name_STATE,user_defs_start
+	defvar "HERE",4,,HERE,name_STATE,0
 	defvar "LATEST",6,,_LATEST,name_HERE,name_SYSCALL0 // SYSCALL0 must be last in built-in dictionary
 	defvar "S0",2,,SZ,name__LATEST,0
 	defvar "BASE",4,,BASE,name_SZ,10
@@ -1278,14 +1288,14 @@ var_$3 :
 	SYS_*		and the numeric codes of various Linux syscalls (from <asm/unistd.h>)
 */
 
-	
-        .macro defconst
-        defcode $0,$1,$2,$3,$4
+
+	.macro defconst
+	defcode $0,$1,$2,$3,$4
 	// cant push 64bit immediate in x64:
 	lea $5, %rax
-        push %rax
-        NEXT
-        .endm
+	push %rax
+	NEXT
+	.endm
 
 	defconst "VERSION",7,,VERSION,name_BASE,JONES_VERSION
 	defconst "R0",2,0,RZ,name_VERSION,return_stack_top(%rip)
@@ -1302,7 +1312,7 @@ var_$3 :
 
 
 
-	
+
 	defconst "O_RDONLY",8,,__O_RDONLY,name_SYS_WRITE,0
 	defconst "O_WRONLY",8,,__O_WRONLY,name___O_RDONLY,1
 	defconst "O_RDWR",6,,__O_RDWR,name___O_WRONLY,2
@@ -1360,7 +1370,7 @@ var_$3 :
 /*
 	INPUT AND OUTPUT ----------------------------------------------------------------------
 
-	These are our first really meaty/complicated FORTH primitives.  I have chosen to write them in
+	These are our first really meaty/complicated FORTH primitives.	I have chosen to write them in
 	assembler, but surprisingly in "real" FORTH implementations these are often written in terms
 	of more fundamental FORTH primitives.  I chose to avoid that because I think that just obscures
 	the implementation.  After all, you may not understand assembler but you can just think of it
@@ -1377,7 +1387,7 @@ var_$3 :
 	to type their name -- ultimately it all comes in through KEY.
 
 	The implementation of KEY uses an input buffer of a certain size (defined at the end of this
-	file).  It calls the Linux read(2) system call to fill this buffer and tracks its position
+	file).	It calls the Linux read(2) system call to fill this buffer and tracks its position
 	in the buffer using a couple of variables, and if it runs out of input buffer then it refills
 	it automatically.  The other thing that KEY does is if it detects that stdin has closed, it
 	exits the program, which is why when you hit ^D the FORTH system cleanly exits.
@@ -1386,9 +1396,9 @@ var_$3 :
 	|				 |
 	V				 V
 	+-------------------------------+--------------------------------------+
-	| INPUT READ FROM STDIN ....... | unused part of the buffer            |
+	| INPUT READ FROM STDIN ....... | unused part of the buffer	       |
 	+-------------------------------+--------------------------------------+
-	                  ^
+			  ^
 			  |
 		       currkey (next character to read)
 
@@ -1412,11 +1422,11 @@ _KEY:
 	// do it the newfangled x64 macos way
 	push %rsi
 	push %rdi
-        mov $__NR_read, %eax      // read
-	mov $0, %rdi              // 1st param: stdin
-	lea buffer(%rip), %rsi    // 2nd param: buffer
-	mov %rsi,currkey(%rip)    // reset currkey to beginning of buffer
-	mov $BUFFER_SIZE, %rdx    // 3rd param: max length
+	mov $__NR_read, %eax	  // read
+	mov $0, %rdi		  // 1st param: stdin
+	lea buffer(%rip), %rsi	  // 2nd param: buffer
+	mov %rsi,currkey(%rip)	  // reset currkey to beginning of buffer
+	mov $BUFFER_SIZE, %rdx	  // 3rd param: max length
 	syscall
 	pop %rdi
 	pop %rsi
@@ -1456,14 +1466,14 @@ _EMIT:
 	mov $1,%rdi			// 1st param: stdout
 	mov %al,emit_scratch(%rip)
 	// write needs the address of the byte to write
-	lea emit_scratch(%rip), %rsi 	// 2nd param: address of string
+	lea emit_scratch(%rip), %rsi	// 2nd param: address of string
 	mov $1,%rdx			// 3rd param: length of string
 	mov $__NR_write,%rax		// write syscall
 	syscall
 	mov %r9,%rdi
 	mov %r10,%rsi
 	ret
-	
+
 	.data			// NB: easier to fit in the .data section
 emit_scratch:
 	.space 1		// scratch used by EMIT
@@ -1493,7 +1503,7 @@ emit_scratch:
 	WORD FOO
 	which puts "FOO" and length 3 on the stack, but when compiling:
 	: BAR WORD FOO ;
-	is an error (or at least it doesn't do what you might expect).  Later we'll talk about compiling
+	is an error (or at least it doesn't do what you might expect).	Later we'll talk about compiling
 	and immediate mode, and you'll understand why.
 */
 
@@ -1525,7 +1535,7 @@ _WORD:
 	// I don't work in 64 bit: subq word_buffer(%rip),%rdi
 	mov %rdi,%rcx
 	lea word_buffer(%rip),%rdi// return address of the word
-        subq %rdi, %rcx           // return length of the word
+	subq %rdi, %rcx		  // return length of the word
 	ret
 
 	/* Code to skip \ comments to end of the current line. */
@@ -1536,7 +1546,7 @@ _WORD:
 	jmp 1b
 
 	.data			// NB: easier to fit in the .data section
-	// A static buffer where WORD returns.  Subsequent calls
+	// A static buffer where WORD returns.	Subsequent calls
 	// overwrite this buffer.  Maximum word length is 32 chars.
 	.balign 8
 word_buffer:
@@ -1544,7 +1554,7 @@ word_buffer:
 
 /*
 	As well as reading in words we'll need to read in numbers and for that we are using a function
-	called NUMBER.  This parses a numeric string such as one returned by WORD and pushes the
+	called NUMBER.	This parses a numeric string such as one returned by WORD and pushes the
 	number on the parameter stack.
 
 	The function uses the variable BASE as the base (radix) for conversion, so for example if
@@ -1555,7 +1565,7 @@ word_buffer:
 	If the string can't be parsed as a number (or contains characters outside the current BASE)
 	then we need to return an error indication.  So NUMBER actually returns two items on the stack.
 	At the top of stack we return the number of unconverted characters (ie. if 0 then all characters
-	were converted, so there is no error).  Second from top of stack is the parsed number or a
+	were converted, so there is no error).	Second from top of stack is the parsed number or a
 	partial value if there was an error.
 */
 	defcode "NUMBER",6,,NUMBER,name_WORD
@@ -1573,7 +1583,7 @@ _NUMBER:
 	test %rcx,%rcx		// trying to parse a zero-length string is an error, but will return 0.
 	jz 5f
 
-	mov var_BASE(%rip),%rdx	// get BASE (in %dl)
+	mov var_BASE(%rip),%rdx // get BASE (in %dl)
 
 	// Check if first character is '-'.
 	movb (%rdi),%bl		// %bl = first character in string
@@ -1635,7 +1645,7 @@ _NUMBER:
 	|
 	V
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        | +          | EXIT       |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    | +		 | EXIT	      |
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
 
 	See also >CFA and >DFA.
@@ -1703,7 +1713,7 @@ _FIND:
 	|					   |
 	V					   V
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        | +          | EXIT       |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    | +		 | EXIT	      |
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
 						   codeword
 
@@ -1747,7 +1757,7 @@ _TCFA:
 	|					   |		 |
 	V					   V		 V
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        | +          | EXIT       |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    | +		 | EXIT	      |
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
 						   codeword
 
@@ -1765,7 +1775,7 @@ _TCFA:
 /*
 	COMPILING ----------------------------------------------------------------------
 
-	Now we'll talk about how FORTH compiles words.  Recall that a word definition looks like this:
+	Now we'll talk about how FORTH compiles words.	Recall that a word definition looks like this:
 
 		: DOUBLE DUP + ;
 
@@ -1775,13 +1785,13 @@ _TCFA:
 	   ^
 	   |
 	+--|------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        | +          | EXIT       |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    | +		 | EXIT	      |
 	+---------+---+---+---+---+---+---+---+---+------------+--|---------+------------+------------+
-           ^       len                         pad  codeword      |
+	   ^	   len			       pad  codeword	  |
 	   |							  V
 	  LATEST points here				points to codeword of DUP
 
-	There are several problems to solve.  Where to put the new word?  How do we read words?  How
+	There are several problems to solve.  Where to put the new word?  How do we read words?	 How
 	do we define the words : (COLON) and ; (SEMICOLON)?
 
 	FORTH solves this rather elegantly and as you might expect in a very low-level way which
@@ -1796,7 +1806,7 @@ _TCFA:
 	When STATE is zero, the interpreter just runs each word as it looks them up.  This is known as
 	immediate mode.
 
-	The interesting stuff happens when STATE is non-zero -- compiling mode.  In this mode the
+	The interesting stuff happens when STATE is non-zero -- compiling mode.	 In this mode the
 	interpreter appends the codeword pointer to user memory (the HERE variable points to the next
 	free byte of user memory -- see DATA SEGMENT section below).
 
@@ -1810,9 +1820,9 @@ _TCFA:
 	   ^							|   the interpreter will start appending
 	   |							V   codewords.
 	+--|------+---+---+---+---+---+---+---+---+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      |
 	+---------+---+---+---+---+---+---+---+---+------------+
-                   len                         pad  codeword
+		   len			       pad  codeword
 
 	(3) Set LATEST to point to the newly defined word, ...
 
@@ -1825,7 +1835,7 @@ _TCFA:
 	After : has run, our input is here:
 
 	: DOUBLE DUP + ;
-	         ^
+		 ^
 		 |
 		Next byte returned by KEY will be the 'D' character of DUP
 
@@ -1836,9 +1846,9 @@ _TCFA:
 									     |
 									     V
 	+---------+---+---+---+---+---+---+---+---+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    |
 	+---------+---+---+---+---+---+---+---+---+------------+------------+
-                   len                         pad  codeword
+		   len			       pad  codeword
 
 	Next we read +, get the codeword pointer, and append it:
 
@@ -1846,16 +1856,16 @@ _TCFA:
 											  |
 											  V
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        | +          |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    | +		 |
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+
-                   len                         pad  codeword
+		   len			       pad  codeword
 
-	The issue is what happens next.  Obviously what we _don't_ want to happen is that we
+	The issue is what happens next.	 Obviously what we _don't_ want to happen is that we
 	read ";" and compile it and go on compiling everything afterwards.
 
 	At this point, FORTH uses a trick.  Remember the length byte in the dictionary definition
 	isn't just a plain length byte, but can also contain flags.  One flag is called the
-	IMMEDIATE flag (F_IMMED in this code).  If a word in the dictionary is flagged as
+	IMMEDIATE flag (F_IMMED in this code).	If a word in the dictionary is flagged as
 	IMMEDIATE then the interpreter runs it immediately _even if it's in compile mode_.
 
 	This is how the word ; (SEMICOLON) works -- as a word flagged in the dictionary as IMMEDIATE.
@@ -1867,9 +1877,9 @@ _TCFA:
 	After the interpreter reads ; and executes it 'immediately', we get this:
 
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP        | +          | EXIT       |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      | DUP	    | +		 | EXIT	      |
 	+---------+---+---+---+---+---+---+---+---+------------+------------+------------+------------+
-                   len                         pad  codeword					       ^
+		   len			       pad  codeword					       ^
 												       |
 												      HERE
 	STATE is set to 0.
@@ -1881,7 +1891,7 @@ _TCFA:
 	half-finished state.  We certainly wouldn't want DOUBLE to be called somehow during
 	this time.  There are several ways to stop this from happening, but in FORTH what we
 	do is flag the word with the HIDDEN flag (F_HIDDEN in this code) just while it is
-	being compiled.  This prevents FIND from finding it, and thus in theory stops any
+	being compiled.	 This prevents FIND from finding it, and thus in theory stops any
 	chance of it being called.
 
 	The above explains how compiling, : (COLON) and ; (SEMICOLON) works and in a moment I'm
@@ -1892,9 +1902,9 @@ _TCFA:
 						   |
 						   V
 	+---------+---+---+---+---+---+---+---+---+
-	| LINK    | 6 | D | O | U | B | L | E | 0 |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 |
 	+---------+---+---+---+---+---+---+---+---+
-                   len                         pad
+		   len			       pad
 
 	and the second part, the actual definition of : (COLON), calls CREATE and appends the
 	DOCOL codeword, so leaving:
@@ -1903,9 +1913,9 @@ _TCFA:
 								|
 								V
 	+---------+---+---+---+---+---+---+---+---+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 | DOCOL      |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 | DOCOL      |
 	+---------+---+---+---+---+---+---+---+---+------------+
-                   len                         pad  codeword
+		   len			       pad  codeword
 
 	CREATE is a standard FORTH word and the advantage of this split is that we can reuse it to
 	create other types of words (not just ones which contain code, but words which contain variables,
@@ -1919,7 +1929,7 @@ _TCFA:
 	pop %rbx		// %ebx = address of name
 
 	// Link pointer.
-	mov var_HERE(%rip),%rdi	// %edi is the address of the header
+	mov var_HERE(%rip),%rdi // %edi is the address of the header
 	mov var__LATEST(%rip),%rax	// Get link pointer
 	stosq			// and store it in the header.
 
@@ -1944,15 +1954,15 @@ _TCFA:
 	to use.
 
 	The first is , (COMMA) which is a standard FORTH word which appends a 32 bit integer to the user
-	memory pointed to by HERE, and adds 4 to HERE.  So the action of , (COMMA) is:
+	memory pointed to by HERE, and adds 4 to HERE.	So the action of , (COMMA) is:
 
 							previous value of HERE
 								 |
 								 V
 	+---------+---+---+---+---+---+---+---+---+-- - - - - --+------------+
-	| LINK    | 6 | D | O | U | B | L | E | 0 |             |  <data>    |
+	| LINK	  | 6 | D | O | U | B | L | E | 0 |		|  <data>    |
 	+---------+---+---+---+---+---+---+---+---+-- - - - - --+------------+
-                   len                         pad		              ^
+		   len			       pad			      ^
 									      |
 									new value of HERE
 
@@ -1967,9 +1977,9 @@ _TCFA:
 	call _COMMA
 	NEXT
 _COMMA:
-	mov var_HERE(%rip),%rdi	// HERE
+	mov var_HERE(%rip),%rdi // HERE
 	stosq			// Store it.
-	mov %rdi,var_HERE(%rip)	// Update HERE (incremented)
+	mov %rdi,var_HERE(%rip) // Update HERE (incremented)
 	ret
 
 /*
@@ -1985,9 +1995,9 @@ _COMMA:
 	[	LBRAC		STATE := 0	Switch to immediate mode.
 	]	RBRAC		STATE := 1	Switch to compile mode.
 
-	[ (LBRAC) is an IMMEDIATE word.  The reason is as follows: If we are in compile mode and the
+	[ (LBRAC) is an IMMEDIATE word.	 The reason is as follows: If we are in compile mode and the
 	interpreter saw [ then it would compile it rather than running it.  We would never be able to
-	switch back to immediate mode!  So we flag the word as IMMEDIATE so that even in compile mode
+	switch back to immediate mode!	So we flag the word as IMMEDIATE so that even in compile mode
 	the word runs immediately, switching us back to immediate mode.
 */
 
@@ -1997,7 +2007,7 @@ _COMMA:
 	NEXT
 
 	defcode "]",1,,RBRAC,name__LBRAC
-	movq $1,var_STATE(%rip)	// Set STATE to 1.
+	movq $1,var_STATE(%rip) // Set STATE to 1.
 	NEXT
 
 /*
@@ -2008,17 +2018,17 @@ _COMMA:
 	defword ":",1,,COLON,name_RBRAC
 	.quad WORD		// Get the name of the new word
 	.quad CREATE		// CREATE the dictionary entry / header
-	.quad _LIT, DOCOL, COMMA	// Append DOCOL  (the codeword).
+	.quad _LIT, DOCOL, COMMA	// Append DOCOL	 (the codeword).
 	.quad _LATEST, FETCH, HIDDEN // Make the word hidden (see below for definition).
 	.quad RBRAC		// Go into compile mode.
 	.quad EXIT		// Return from the function.
 
 /*
-	; (SEMICOLON) is also elegantly simple.  Notice the F_IMMED flag.
+	; (SEMICOLON) is also elegantly simple.	 Notice the F_IMMED flag.
 */
 
 	defword ";",1,F_IMMED,SEMICOLON,name_COLON
-	.quad _LIT, EXIT, COMMA	// Append EXIT (so the word will return).
+	.quad _LIT, EXIT, COMMA // Append EXIT (so the word will return).
 	.quad _LATEST, FETCH, HIDDEN // Toggle hidden flag -- unhide the word (see below for definition).
 	.quad _LBRAC		// Go back to IMMEDIATE mode.
 	.quad EXIT		// Return from the function.
@@ -2029,7 +2039,7 @@ _COMMA:
 
 	Words flagged with IMMEDIATE (F_IMMED) aren't just for the FORTH compiler to use.  You can define
 	your own IMMEDIATE words too, and this is a crucial aspect when extending basic FORTH, because
-	it allows you in effect to extend the compiler itself.  Does gcc let you do that?
+	it allows you in effect to extend the compiler itself.	Does gcc let you do that?
 
 	Standard FORTH words like IF, WHILE, ." and so on are all written as extensions to the basic
 	compiler, and are all IMMEDIATE words.
@@ -2067,7 +2077,7 @@ _COMMA:
 	'HIDE word' toggles the flag on a named 'word'.
 
 	Setting this flag stops the word from being found by FIND, and so can be used to make 'private'
-	words.  For example, to break up a large word into smaller parts you might do:
+	words.	For example, to break up a large word into smaller parts you might do:
 
 		: SUB1 ... subword ... ;
 		: SUB2 ... subword ... ;
@@ -2117,7 +2127,7 @@ _COMMA:
 	and immediate mode).
 
 	This definition of ' uses a cheat which I copied from buzzard92.  As a result it only works in
-	compiled code.  It is possible to write a version of ' based on WORD, FIND, >CFA which works in
+	compiled code.	It is possible to write a version of ' based on WORD, FIND, >CFA which works in
 	immediate mode too.
 */
 	defcode "'",1,,TICK,name_HIDE
@@ -2138,7 +2148,7 @@ _COMMA:
 	%esi starts by pointing to the offset field (compare to LIT above):
 
 	+---------------------+-------+---- - - ---+------------+------------+---- - - - ----+------------+
-	| (Dictionary header) | DOCOL |            | BRANCH     | offset     | (skipped)     | word       |
+	| (Dictionary header) | DOCOL |		   | BRANCH	| offset     | (skipped)     | word	  |
 	+---------------------+-------+---- - - ---+------------+-----|------+---- - - - ----+------------+
 								   ^  |			      ^
 								   |  |			      |
@@ -2146,7 +2156,7 @@ _COMMA:
 								  %esi added to offset
 
 	The offset is added to %esi to make the new %esi, and the result is that when NEXT runs, execution
-	continues at the branch target.  Negative offsets work as expected.
+	continues at the branch target.	 Negative offsets work as expected.
 
 	0BRANCH is the same except the branch happens conditionally.
 
@@ -2181,7 +2191,7 @@ _COMMA:
 	LITERAL STRINGS ----------------------------------------------------------------------
 
 	LITSTRING is a primitive used to implement the ." and S" operators (which are written in
-	FORTH).  See the definition of those operators later.
+	FORTH).	 See the definition of those operators later.
 
 	TELL just prints a string.  It's more efficient to define this in assembly because we
 	can make it a single Linux syscall.
@@ -2192,7 +2202,7 @@ _COMMA:
 	push %rsi		// push the address of the start of the string
 	push %rax		// push it on the stack
 	add %rax,%rsi		// skip past the string
- 	add $7,%rsi		// but round up to next 4 byte boundary
+	add $7,%rsi		// but round up to next 4 byte boundary
 	and $~7,%rsi
 	NEXT
 
@@ -2295,7 +2305,7 @@ _COMMA:
 	push %rdx
 	mov $2,%rdi			// 1st param: stderr
 	lea errmsg(%rip),%rsi		// 2nd param: error message
-	mov $(errmsgend-errmsg),%rdx 	// 3rd param: length of string
+	mov $(errmsgend-errmsg),%rdx	// 3rd param: length of string
 	mov $__NR_write,%rax		// write syscall
 	syscall
 
@@ -2309,8 +2319,8 @@ _COMMA:
 	mov $40,%rdx
 7:	sub %rdx,%rcx			// %ecx = start of area to print, %edx = length
 	mov $2,%rdi			// 1st param: stderr
-	mov %rcx, %rsi          	// 2nd param: length
-	// mov %rdx, %rdx		// 3rd param: buffer, or currkey-40 
+	mov %rcx, %rsi			// 2nd param: length
+	// mov %rdx, %rdx		// 3rd param: buffer, or currkey-40
 	mov $__NR_write,%rax		// write syscall
 	syscall
 
@@ -2327,10 +2337,9 @@ _COMMA:
 	.const
 errmsg: .ascii "PARSE ERROR: "
 errmsgend:
-errENOTSUP: .ascii "ENOTSUP\n"
-errEACCES: .ascii "EACCES\n"
-errEINVAL: .ascii "EINVAL\n"
 errmsgnl: .ascii "\n"
+errMMAPFAILED: .ascii "ENOTSUP\n"
+errMMAPFAILEDEND:
 
 	.data			// NB: easier to fit in the .data section
 	.balign 8
@@ -2346,19 +2355,19 @@ interpret_is_lit:
 	EXECUTE is used to run execution tokens.  See the discussion of execution tokens in the
 	FORTH code for more details.
 
-	SYSCALL0, SYSCALL1, SYSCALL2, SYSCALL3 make a standard Linux system call.  (See <asm/unistd.h>
+	SYSCALL0, SYSCALL1, SYSCALL2, ..., SYSCALL6 make a standard Linux system call.	(See <asm/unistd.h>
 	for a list of system call numbers).  As their name suggests these forms take between 0 and 3
 	syscall parameters, plus the system call number.
 
 	In this FORTH, SYSCALL0 must be the last word in the built-in (assembler) dictionary because we
-	initialise the LATEST variable to point to it.  This means that if you want to extend the assembler
+	initialise the LATEST variable to point to it.	This means that if you want to extend the assembler
 	part, you must put new words before SYSCALL0, or else change how LATEST is initialised.
 */
 
 	defcode "DUMMY",5,,DUMMY,name_INTERPRET
-	                        // Do nothing. Not used anywhere. Makes a good breakpoint target
-        NEXT
-	
+				// Do nothing. Not used anywhere. Makes a good breakpoint target
+	NEXT
+
 	defcode "CHAR",4,,CHAR, name_DUMMY
 	call _WORD		// Returns %ecx = length, %edi = pointer to word.
 	xor %rax,%rax
@@ -2371,38 +2380,105 @@ interpret_is_lit:
 	jmp *(%rax)		// and jump to it.
 				// After xt runs its NEXT will continue executing the current word.
 
-	defcode "SYSCALL3",8,,SYSCALL3,name_EXECUTE
-  	mov %rsi,%r10 //save %rsi
-	mov %rdi,%r9 //save %rdi
+	// TODO: Find out if there is a contract between forth words
+	// to preserve registers. The macintel port of jonesforth uses
+	// registers 9 and 10 to save the main registers between syscalls
+	// but that breaks with the darwin's x64 syscall ABI.
+	//
+	// For now, syscalls can clobber registers r11-r15 that are not anywhere else but that's
+	// not a great solution.
+	//
+	// Cleaning this up and documenting it make a good exercise.
+
+	defcode "SYSCALL6",8,,SYSCALL6,name_EXECUTE
+	mov %r9,%r15 //save %r9
+	mov %r8,%r14 //save %r8
+	mov %r10,%r13 //save %r10
+	mov %rsi,%r12 //save %rsi
+	mov %rdi,%r11 //save %rdi
+	pop %rax		// System call number (see <asm/unistd.h>)
+	pop %rdi		// First parameter.
+	pop %rsi		// Second parameter
+	pop %rdx		// Third parameter
+	pop %r10		// Fourth parameter
+	pop %r8			// Fifth parameter
+	pop %r9			// Sixth parameter
+	syscall
+	push %rax		// Result (negative for -errno)
+	mov %r11,%rdi
+	mov %r12,%rsi
+	mov %r13,%r10
+	mov %r14,%r8
+	mov %r15,%r9
+	NEXT
+
+	defcode "SYSCALL5",8,,SYSCALL5,name_SYSCALL6
+	mov %r8,%r14 //save %rdi
+	mov %r10,%r13 //save %rsi
+	mov %rsi,%r12 //save %rsi
+	mov %rdi,%r11 //save %rdi
+	pop %rax		// System call number (see <asm/unistd.h>)
+	pop %rdi		// First parameter.
+	pop %rsi		// Second parameter
+	pop %rdx		// Third parameter
+	pop %r10		// Forth parameter
+	pop %r9			// Fifth parameter
+	syscall
+	push %rax		// Result (negative for -errno)
+	mov %r11,%rdi
+	mov %r12,%rsi
+	mov %r13,%r10
+	mov %r14,%r8
+	NEXT
+
+	defcode "SYSCALL4",8,,SYSCALL4,name_SYSCALL5
+	mov %r10,%r13 //save %rsi
+	mov %rsi,%r12 //save %rsi
+	mov %rdi,%r11 //save %rdi
+	pop %rax		// System call number (see <asm/unistd.h>)
+	pop %rdi		// First parameter.
+	pop %rsi		// Second parameter
+	pop %rdx		// Third parameter
+	pop %r10		// Third parameter
+	syscall
+	push %rax		// Result (negative for -errno)
+	mov %r11,%rdi
+	mov %r12,%rsi
+	mov %r13,%r10
+	NEXT
+
+	defcode "SYSCALL3",8,,SYSCALL3,name_SYSCALL4
+  	mov %rsi,%r12 //save %rsi
+	mov %rdi,%r11 //save %rdi
 	pop %rax		// System call number (see <asm/unistd.h>)
 	pop %rdi		// First parameter.
 	pop %rsi		// Second parameter
 	pop %rdx		// Third parameter
 	syscall
 	push %rax		// Result (negative for -errno)
-	mov %r9,%rdi
-	mov %r10,%rsi
+	mov %r11,%rdi
+	mov %r12,%rsi
 	NEXT
 
 	defcode "SYSCALL2",8,,SYSCALL2,name_SYSCALL3
-	mov %rsi,%r10 //save %rsi
-	mov %rdi,%r9 //save %rdi
+	mov %rsi,%r12 //save %rsi
+	mov %rdi,%r11 //save %rdi
 	pop %rax		// System call number (see <asm/unistd.h>)
 	pop %rdi		// First parameter.
 	pop %rsi		// Second parameter
 	syscall
 	push %rax		// Result (negative for -errno)
-	mov %r9,%rdi
-	mov %r10,%rsi
+	mov %r11,%rdi
+	mov %r12,%rsi
 	NEXT
 
 	defcode "SYSCALL1",8,,SYSCALL1,name_SYSCALL2
-	mov %rdi,%r9 //save %rdi
+	mov %rdi,%r11 //save %rdi
 	pop %rax		// System call number (see <asm/unistd.h>)
 	pop %rdi		// First parameter.
 	syscall
 	push %rax		// Result (negative for -errno)
-	mov %r9,%rdi
+	mov %r11,%rdi
 	NEXT
 
 	defcode "SYSCALL0",8,,SYSCALL0,name_SYSCALL1
@@ -2414,49 +2490,29 @@ interpret_is_lit:
 /*
 	DATA SEGMENT ----------------------------------------------------------------------
 
-	Here we set up the Linux data segment, used for user definitions and variously known as just
-	the 'data segment', 'user memory' or 'user definitions area'.  It is an area of memory which
-	grows upwards and stores both newly-defined FORTH words and global variables of various
-	sorts.
+	In the original jonesforth, the data segment held among other
+	things space for user definitions and variously known as just
+	the 'data segment', 'user memory' or 'user definitions area'.
+
+	However, since the underlying MacOS make a direct port unduly
+	burdensome, the data segment now only contains the return
+	stack, the buffer for the input parser, and some other
+	variables and constants.
+
+        The user definition area is allocated dynamically at the very
+	beginning of this program via nmap.  It is an area of memory
+	which grows upwards and stores both newly-defined FORTH words
+	and global variables of various sorts.
 
 	It is completely analogous to the C heap, except there is no generalised 'malloc' and 'free'
 	(but as with everything in FORTH, writing such functions would just be a Simple Matter
 	Of Programming).  Instead in normal use the data segment just grows upwards as new FORTH
 	words are defined/appended to it.
 
-	There are various "features" of the GNU toolchain which make setting up the data segment
-	more complicated than it really needs to be.  One is the GNU linker which inserts a random
-	"build ID" segment.  Another is Address Space Randomization which means we can't tell
-	where the kernel will choose to place the data segment (or the stack for that matter).
-
-	Therefore writing this set_up_data_segment assembler routine is a little more complicated
-	than it really needs to be.  We ask the Linux kernel where it thinks the data segment starts
-	using the brk(2) system call, then ask it to reserve some initial space (also using brk(2)).
-
-	You don't need to worry about this code.
 */
 	.text
 	.set INITIAL_DATA_SEGMENT_SIZE,65536
 
-/* 	Not implementing BRK calls and dynamically extending heap for now.
-	We need to use sbrk instad of brk, and there are some limitations.
-
-	For now, we simply do not do any setup except statically allocating
-	data in the BSS segment.
-	
-set_up_data_segment:
-	push %rdi
-	xor %rdi,%rdi		// Call brk(0)
-	mov $__NR_brk(%rip),%rax
-	syscall
-	mov %rax,var_HERE(%rip)	// Initialise HERE to point at beginning of data segment.
-	add $INITIAL_DATA_SEGMENT_SIZE,%rax	// Reserve nn bytes of memory for initial data segment.
-	mov %rax,%rdi		// Call brk(HERE+INITIAL_DATA_SEGMENT_SIZE)
-	mov $__NR_brk,%rax
-	syscall
-	pop %rdi
-	ret
-*/
 /*
 	We allocate static buffers for the return static and input buffer (used when
 	reading in files and text that the user types in).
@@ -2470,13 +2526,13 @@ set_up_data_segment:
 	// jonesforth.f (toward the end), it's amazing!
 	// This means self-modifying code, and modern security practices get in the way.
 	// The only way I made this work on OSX 10.15+ for now is to invoke a gcc option
-        // that is not blocked by Apple (yet!): 
-	// 	gcc -nostdlib -segprot __DATA rwx rwx -static $(BUILD_ID_NONE) -o $@ $<
+        // that is not blocked by Apple (yet!):
+	// 	gcc -nostdlib -static -o $@ $<
 	// It's worth looking for a better solution, but for now, it makes test_assembler.f
 	// pass. Yay!
 
 /* FORTH return stack. */
-	.balign 8 		// was .aligned to 4096, but unclear why
+	.balign 8 		// was aligned to 4096, (page size?)
 return_stack:
 	.space RETURN_STACK_SIZE
 return_stack_top:		// Initial top of return stack.
@@ -2485,10 +2541,7 @@ return_stack_top:		// Initial top of return stack.
 	.balign 8 		// was .aligned to 4096, but unclear why
 buffer:
 	.space BUFFER_SIZE
-
 	.balign 8
-user_defs_start:
-        .space USER_DEFS_SIZE
 /*
 	START OF FORTH CODE ----------------------------------------------------------------------
 
