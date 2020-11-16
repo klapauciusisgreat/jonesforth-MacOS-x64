@@ -1,13 +1,13 @@
 # Port of JonesForth to MacOS Catalina
 
 This is a fairly simple port but had to deal with a number of
-idiosyncrasies of Catalina and x64 programming.
+idiosyncrasies of MacOS and x64 programming.
 
 This is also not an elegant port. For instance, sbrk is not implemented and
 to get the assembler going, I just mmapped a large enough segment as rwx 
 (to allow self modifying code) via the mmap syscall.  The x64 specific
 code is also probably inefficient. However, this version passes all
-the tests and can serve as a basis for further improvements.
+the tests and can serve as a basis for further improvements, both on Catalina and Big Sur.
 
 Thanks to 
 
