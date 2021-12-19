@@ -7,7 +7,7 @@ This is also not an elegant port. For instance, sbrk is not implemented and
 to get the assembler going, I just mmapped a large enough segment as rwx 
 (to allow self modifying code) via the mmap syscall.  The x64 specific
 code is also probably inefficient. However, this version passes all
-the tests and can serve as a basis for further improvements, both on Catalina and Big Sur.
+the tests and can serve as a basis for further improvements, on Catalina, Big Sur, and Monterey.
 
 Thanks to 
 
